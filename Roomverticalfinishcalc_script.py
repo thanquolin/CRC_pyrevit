@@ -11,6 +11,11 @@ timer = Timer()
 #from Autodesk.Revit.DB import Transaction, FilteredElementCollector, BuiltInCategory
 import Autodesk.Revit.DB as DB
 import clr
+clr.AddReference('ProtoGeometry')
+from Autodesk.DesignScript.Geometry import *
+clr.AddReference('DSCoreNodes')
+import DSCore
+from DSCore import *
 
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
@@ -97,9 +102,32 @@ for room in rooms:
                 wall_vertical_faces.append(face)
             else:
                 pass
-    print(str(len(room_vertical_faces))+", "+str(len(wall_vertical_faces)))
+    #cruzamos las caras (teniendo en cuenta sus normales)
+    def normals_opposed(vector1, vector2):
+        if vector1[0] == -1*vector2[0] and vector1[1] == -1*vector2[1] and vector1[2] == -1*vector2[2]:
+            print (str(vector1)+" , "+str(vector2) +".")
+            print("True")
+            return True
+        else:
+            print (str(vector1)+" , "+str(vector2) +".")
+            print("False")
+            return False
 
 
+    intersections = list()
+    for rface in room_vertical_faces:
+        for wface in wall_vertical_faces:
+            intersections.append(Geometry.Intersect(rface.get_Geometry(Options())),wface.get_Geometry(Options()))
+            """if normals_opposed(rface.ComputeNormal(UV()),wface.ComputeNormal(UV())):
+                intersections.append(rface.Intersect(wface))
+            else:
+                pass"""
+    print(intersections)
+    results = list()
+    for i in intersections:
+        if str(i) == "Autodesk.Revit.DB.FaceIntersectionFaceResult.Intersecting":
+            results.append(i)
+            print(str(i))
 
 #for timing
 endtime ="It took me " + str(timer.get_time()) + " seconds to calculate this."
