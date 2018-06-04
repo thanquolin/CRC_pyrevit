@@ -15,9 +15,6 @@ import math
 import clr
 import Autodesk.Revit.DB as DB
 from Autodesk.Revit.DB import *
-from Autodesk.Revit.DB.Architecture import *
-from Autodesk.Revit.DB.Analysis import *
-from Autodesk.Revit.UI import *
 
 #FUNCTIONS
 
@@ -67,8 +64,8 @@ print("Walls in model: " + str(len(walls)))
 
 #DATA PROCESSING
 
-if type(walls[0].LookupParameter("ORIENTATION")) != Parameter:
-	print("There is no ORIENTATION text parameter in walls, create and/or assign it to wall category.")
+if type(walls[0].LookupParameter("ORIENTATION")) != Parameter or walls[0].LookupParameter("ORIENTATION").StorageType != DB.StorageType.String:
+	print("There is no ORIENTATION parameter with text StorageType in walls, create and/or assign it to wall category.")
 else:
 	#initial wall normals.
 	for wall in walls:
