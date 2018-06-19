@@ -1,3 +1,5 @@
+#Work in progress!!
+
 """Inscribe en el parametro "MED_Net vertical finish room area" de todas las habitaciones del modelo el area neta de acabados verticales."""
 """Se cruzan las caras verticales de la geometria de la habitacion con las caras verticales de los muros que forman sus boundaries. No funciona para habitaciones para las que Revit no puede crear geometria."""
 
