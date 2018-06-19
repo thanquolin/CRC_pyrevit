@@ -1,2 +1,2 @@
-# CRC_pyrevit
-pyRevit scripts
+# CRC_pyRevit
+collection of pyRevit scripts
