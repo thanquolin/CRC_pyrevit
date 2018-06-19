@@ -30,7 +30,7 @@ selection = [ doc.GetElement( elId ) for elId in __revit__.ActiveUIDocument.Sele
 if len(selection) > 1:
     print("You have selected more than one element. Please select only one element of one of the available categories.")
 elif doc.GetElement(selection[0].GetTypeId()).Category.Name not in available_categories:
-    print("You have selected an instance of an unavailable category, please select an instance of an available category (" + ",".join(available_categories)) + ")."
+    print("You have selected an instance of an unavailable category, please select an instance of an available category (" + ",".join(available_categories) + ").")
 else:
     instances = FilteredElementCollector(doc).OfCategory(eval("BuiltInCategory.OST_"+str(selection[0].Category.Name))).WhereElementIsNotElementType()
     types_ids = list({ id.GetTypeId() for id in instances})
