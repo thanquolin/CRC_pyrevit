@@ -1,4 +1,4 @@
-"""Adds correspondent Mark Type (and a hyphen) at the beginning of type names of all families of the category of the selected item which have modelled instances. Available categories are Doors and Windows. Do not use hyphens in Mark Type or Type Names."""
+"""Adds correspondent Mark Type (and a double hyphen) at the beginning of type names of all families of the category of the selected item which have modelled instances. Available categories are Doors, Windows and Walls. Do not use double hyphens in Mark Type or Type Names."""
 #pyRevit info
 __title__ = 'Add Mark Type\nto Type Name'
 __author__  = 'Carlos Romero Carballo'
@@ -41,14 +41,14 @@ else:
     t.Start()
 
     for id, mark, name in zip(types_ids, type_marks, type_names):
-        if "-" not in name:
-            new_name = mark + " - " + name
+        if "--" not in name:
+            new_name = mark + "--" + name
             doc.GetElement(id).Name = new_name
-            print("Type " + name + " changed to " + new_name + ".")
+            print("Type '" + name + "' changed to '" + new_name + "'.")
         else:
-            updated_name = mark + name[name.index("-")-1:]
+            updated_name = mark + name[name.index("--")-1:]
             doc.GetElement(id).Name = updated_name
-            print("Type " + name + " updated to " + updated_name + ".")
+            print("Type '" + name + "' updated to '" + updated_name + "'.")
     t.Commit()
 
 #report time
