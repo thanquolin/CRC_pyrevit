@@ -4,9 +4,6 @@
 __title__ = 'Crear Suelos\nen Habitaciones'
 __author__  = 'Carlos Romero Carballo'
 
-from pyrevit.coreutils import Timer
-timer = Timer()
-
 import clr
 import Autodesk
 from Autodesk.Revit.DB import *
@@ -18,7 +15,7 @@ uidoc = __revit__.ActiveUIDocument
 
 def fp_active_view(document):
     for parameter in document.ActiveView.Parameters:
-        if parameter.Definition.Name == "Floor Plan" or parameter.Definition.Name == "Floor Plans" or parameter.Definition.Name == "Plano de Planta":
+        if parameter.AsString() == "Floor Plan" or parameter.AsString() == "Floor Plans" or parameter.AsString() == "Plano de Planta":
             return True
     return False
 
@@ -55,6 +52,3 @@ else:
     else:
         highlight = FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Floors).ToElementIds()
     uidoc.Selection.SetElementIds(highlight)
-
-endtime ="\nHe tardado " + str(timer.get_time()) + " segundos en llevar a cabo esta tarea."
-print(endtime)
