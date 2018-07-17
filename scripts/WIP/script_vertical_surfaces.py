@@ -115,10 +115,10 @@ def RoomCalc(room, excluded, hydro):
     hydro_area = 0
     skirt_len = 0
     for wall in final_walls:
-        vert_area += ((FeetToMeters(wall[1].Length) * height) - wall[4])
-        skirt_len += FeetToMeters(wall[1].Length - wall[5])
+        vert_area += (FeetToMeters(wall[1].Length) * height) - wall[4]
+        skirt_len += FeetToMeters(wall[1].Length) - wall[5]
         if wall[2] == True:
-            hydro_area += ((FeetToMeters(wall[1].Length) * height) - wall[4])
+            hydro_area += (FeetToMeters(wall[1].Length) * height) - wall[4]
     return room, vert_area, hydro_area, skirt_len
 
 data = list()
@@ -128,9 +128,9 @@ t = Transaction(doc,"Cálculo Áreas Habitaciones")
 t.Start()
 for line in data:
     print("Habitación" + line[0].LookupParameter("Number").AsString() + " - " + line[0].LookupParameter("Name").AsString() + ": MED_VERT " + str(line[1]) + " m2, MED_HYDRO " + str(line[2]) + " m2, MED_ROD " + str(line[3]) + " m." )
-    line[0].LookupParameter("MED_Área neta de superficie vertical").Set(line[1])
-    line[0].LookupParameter("MED_Área vertical hidrofugada").Set(line[2])
-    line[0].LookupParameter("MED_Rodapié").Set(line[3])
+    line[0].LookupParameter("MED_Área neta de superficie vertical").SetValueString(str(line[1])+" m²")
+    line[0].LookupParameter("MED_Área vertical hidrofugada").SetValueString(str(line[2])+" m²")
+    line[0].LookupParameter("MED_Rodapié").SetValueString(str(line[3])+" m")
 t.Commit()
 
 # COMPROBAR QUE EL PARÁMETRO EXISTE, ETC
