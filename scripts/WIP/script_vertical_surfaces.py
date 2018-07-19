@@ -4,13 +4,10 @@
  MED_Rodapié (Longitud), MED_Cuarto húmedo (Sí/No), y 2 parámetros de tipo de muro: MED_Excluido (Sí/No), MED_Hidrofugado (Sí/No),\
  que indican si el muro tiene acabado y si el tipo de muro va hidrofugado cuando da a un cuarto húmedo, respectivamente."""
 
-#TO DO: Crear excluded e hydro a partir de los elementos del modelo. Comprobar que existen todos los parámetros y responden a los tipos requeridos.
-
 #pyRevit info
 __title__ = 'Medición Acabados\nde Paredes'
 __author__  = 'Carlos Romero Carballo'
 
-#IMPORTS
 import sys
 pyt_path = r'C:\Program Files (x86)\IronPython 2.7\Lib'
 sys.path.append(pyt_path)
@@ -21,13 +18,12 @@ timer = Timer()
 import clr
 clr.AddReference('RevitAPI')
 from Autodesk.Revit.DB import *
-import Autodesk
 
+import Autodesk
 clr.AddReference('RevitNodes')
 import Revit
 clr.ImportExtensions(Revit.GeometryConversion)
 
-#VARIABLES
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
 fec_doors = FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
@@ -66,8 +62,6 @@ FeetToMeters(doc.GetElement(window.GetTypeId()).LookupParameter("Width").AsDoubl
 FeetToMeters(doc.GetElement(window.GetTypeId()).LookupParameter("Height").AsDouble()) if not window.LookupParameter("Height") else FeetToMeters(window.LookupParameter("Height").AsDouble()),\
 window.Host.Id if window.Host != None else 0]\
 for window in windows]
-
-#FUNCTIONS
 
 def RoomCalc(room, excluded, hydro):
     """excluded and hydro are lists of wall type names"""
@@ -134,7 +128,8 @@ for line in data:
 t.Commit()
 
 # COMPROBAR QUE EL PARÁMETRO EXISTE, ETC
+# AÑADIR LA MEDICIÓN DE HYDRO POR TIPO DE MURO
 
 #REPORT TIME
-endtime ="\nHe tardado " + str(timer.get_time()) + " segundos en llevar a cabo esta tarea."
+endtime ="\nHe tardado " + str(timer.get_time())[:3] + " segundos en llevar a cabo esta tarea."
 print(endtime)
