@@ -1,5 +1,5 @@
 # coding: utf8
-"""Alinea scope boxes, section boxes, secciones y alzados a muros, model lines y rejillas. Se selecciona primero la referencia y luego la vista o scope box."""
+"""Alinea scope boxes, secciones y alzados a muros, model lines y rejillas. Se selecciona primero la referencia y luego la vista o scope box."""
 
 #pyRevit info
 __title__ = 'Alinear Vistas\ny Scope Boxes'
@@ -17,9 +17,7 @@ clr.AddReference('RevitAPI')
 from Autodesk.Revit.DB import *
 
 import Autodesk
-clr.AddReference('RevitNodes')
-import Revit
-clr.ImportExtensions(Revit.GeometryConversion)
+from Autodesk import Revit
 
 import Autodesk.Revit.UI.Selection
 
