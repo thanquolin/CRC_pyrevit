@@ -1,5 +1,5 @@
 # coding: utf8
-"""Crea suelos del tipo elegido en las habitaciones del nivel de la planta actual."""
+"""Crea suelos del tipo elegido en todas las habitaciones del nivel de la planta actual (No comprueba si hay suelos ya creados en las habitaciones, cuidado con los duplicados)."""
 #pyRevit info
 __title__ = 'Crear Suelos\nen Habitaciones'
 __author__  = 'Carlos Romero Carballo'
@@ -38,7 +38,7 @@ else:
         for group in room.GetBoundarySegments(options):
             for segment in group:
                 ca.Append(segment.GetCurve())
-                curve_arrays.append(ca)
+            curve_arrays.append(ca)
 
     t = Transaction(doc,"Creación Suelos")
     t.Start()
