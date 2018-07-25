@@ -8,21 +8,13 @@
 __title__ = 'Medición Acabados\nde Paredes'
 __author__  = 'Carlos Romero Carballo'
 
-import sys
-pyt_path = r'C:\Program Files (x86)\IronPython 2.7\Lib'
-sys.path.append(pyt_path)
-
 from pyrevit.coreutils import Timer
 timer = Timer()
 
 import clr
 clr.AddReference('RevitAPI')
-from Autodesk.Revit.DB import *
-
 import Autodesk
-clr.AddReference('RevitNodes')
-import Revit
-clr.ImportExtensions(Revit.GeometryConversion)
+from Autodesk.Revit.DB import *
 
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
