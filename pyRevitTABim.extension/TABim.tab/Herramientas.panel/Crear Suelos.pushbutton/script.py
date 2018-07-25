@@ -7,8 +7,6 @@ __author__  = 'Carlos Romero Carballo'
 import clr
 import Autodesk
 from Autodesk.Revit.DB import *
-from pyrevit import revit, DB, UI
-from pyrevit import forms
 
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
