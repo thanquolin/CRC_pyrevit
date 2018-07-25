@@ -20,6 +20,7 @@ if default_filter_name in old_filters_names:
     [doc.Delete(filter.Id) for filter in old_filters if filter.Name != default_filter_name]
 else:
     new_filter = PhaseFilter.Create(doc,default_filter_name)
-    [new_filter.SetPhaseStatusPresentation(eval("ElementOnPhaseStatus." + categ),PhaseStatusPresentation.ShowOverriden) for categ in ["New","Existing","Demolished","Temporary"]]
+    [new_filter.SetPhaseStatusPresentation(eval("ElementOnPhaseStatus." + categ),PhaseStatusPresentation.ShowOverriden)\
+     for categ in ["New","Existing","Demolished","Temporary"]]
     [doc.Delete(filter.Id) for filter in old_filters]
 t.Commit()
