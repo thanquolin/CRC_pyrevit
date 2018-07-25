@@ -1,5 +1,6 @@
 # coding: utf8
-"""Borra todos los filtros de fase y deja uno llamado Coordinación, donde se muestra todo con Overrides. Si ya existe, deja el existente tal y como estaba y no crea ninguno."""
+"""Borra todos los filtros de fase y deja uno llamado Coordinación, donde se muestra todo con Overrides.\
+Si ya existe, deja el existente tal y como estaba y no crea ninguno."""
 __title__ = 'Reset Filtros\nde Fase'
 __author__  = 'Carlos Romero Carballo'
 
