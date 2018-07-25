@@ -5,20 +5,12 @@
 __title__ = 'Alinear Vistas\ny Scope Boxes'
 __author__  = 'Carlos Romero Carballo'
 
-import sys
-pyt_path = r'C:\Program Files (x86)\IronPython 2.7\Lib'
-sys.path.append(pyt_path)
-
 from pyrevit.coreutils import Timer
 timer = Timer()
 
 import clr
 clr.AddReference('RevitAPI')
 from Autodesk.Revit.DB import *
-
-import Autodesk
-from Autodesk import Revit
-
 import Autodesk.Revit.UI.Selection
 
 doc = __revit__.ActiveUIDocument.Document
@@ -27,8 +19,6 @@ uidoc = __revit__.ActiveUIDocument
 try:
     one = uidoc.Selection.PickObject(Autodesk.Revit.UI.Selection.ObjectType.Element)
     two = uidoc.Selection.PickObject(Autodesk.Revit.UI.Selection.ObjectType.Element)
-
-
     first = doc.GetElement(one)
     second = doc.GetElement(two)
 
@@ -42,7 +32,6 @@ try:
             normal = XYZ(first.GeometryCurve.Direction[1],-first.GeometryCurve.Direction[0],first.GeometryCurve.Direction[2])
         except:
             print("Por favor, selecciona como primer elemento un muro, una línea de modelo o una rejilla.")
-
 
     # process for Scope Boxes, Sections or Elevations
     if second.Category.Name == "Scope Boxes":
