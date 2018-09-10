@@ -50,8 +50,9 @@ def inst_width(instance):
 
 mag = list()
 
+
 for element in instances:
-    bb = element.get_BoundingBox(None)
+    bb = element.get_BoundingBox(None) if element.get_BoundingBox(None) != None else BoundingBoxXYZ()
     minZ = bb.Min.Z
     maxZ = bb.Max.Z
     width = inst_width(element)
@@ -59,10 +60,10 @@ for element in instances:
     distance = 4
     offset = 1
 
-    min = XYZ( -width/2 - offset, minZ - offset, -offset)
-    max = XYZ( width/2 + offset, maxZ + offset, offset)
+    min = XYZ( -width/2 - offset, minZ - offset, -offset) if element.Category.Name == "Doors" else XYZ( -width/2 - offset, minZ - offset*2, -offset)
+    max = XYZ( width/2 + offset, maxZ + offset, offset) if element.Category.Name == "Doors" else XYZ( width/2 + offset, maxZ, offset)
 
-    midpoint = element.Location.Point
+    midpoint = element.Location.Point if element.Location != None else XYZ(0,0,0)
     normal = element.FacingOrientation
     up = XYZ.BasisZ
     viewdir = normal.Negate()
@@ -77,12 +78,41 @@ for element in instances:
     new_bb.Transform = transform
     new_bb.Min = min
     new_bb.Max = max
+    mag.append([new_bb, "MC-" + element.Symbol.Family.Name + "-" + element.Name, element.Id])
 
-    mag.append([new_bb, "MC-" + element.Id.ToString()])
 
 t = Transaction(doc,"Vistas Memoria Carpintería")
 t.Start()
+fec= FilteredElementCollector(doc).OfClass(ViewFamilyType).ToElements()
+for famtype in fec:
+	if famtype.GetParameters("Family Name")[0].AsString() == "Section" and famtype.GetParameters("Type Name")[0].AsString() == "Building Section":
+		viewtype = famtype
+		break
+mc = viewtype.Duplicate("Memoria Carpintería")
+new_views = list()
 for bb in mag:
     section = ViewSection.CreateSection(doc, vft, bb[0])
     section.GetParameters("View Name")[0].Set(bb[1])
+    section.ChangeTypeId(mc.Id)
+    section.Scale = 10
+    new_views.append([section, bb[2]])
+invalid_el_id = ElementId.InvalidElementId
+sheet = ViewSheet.Create(doc, invalid_el_id)
+sheet.Name = "Memoria Carpintería"
+sheet.SheetNumber = "A999"
+coord = 0
+for view in new_views:
+    Viewport.Create(doc, sheet.Id, view[0].Id, XYZ(coord,0,0))
+    coord += 0.5
 t.Commit()
+
+
+for view in new_views:
+    tra = Transaction(doc, "Aislar Carpinterías")
+    uidoc.ActiveView = view[0]
+    tra.Start()
+    view[0].IsolateElementTemporary(view[1])
+    view[0].ConvertTemporaryHideIsolateToPermanent()
+    tra.Commit()
+
+uidoc.ActiveView = sheet
