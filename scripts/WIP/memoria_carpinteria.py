@@ -12,6 +12,13 @@ import Autodesk.Revit.UI.Selection
 
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
+language = uidoc.Application.Application.Language
+
+#Lenguaje
+def par_get(parameter):
+    idx = 0 if language == Autodesk.Revit.ApplicationServices.LanguageType.English_USA else 1
+    parameters = {"Width":["Width","Anchura"], "Height":["Height","Altura"], "Family Name":["Family Name","Nombre de familia"], "Section":["Section","Sección"], "Type Name":["Type Name","Nombre de tipo"], "View Name":["View Name","Nombre de vista"]  }
+    return parameters[parameter][idx]
 
 # Tipo de vista sección (para la creación de las secciones)
 vft = doc.GetDefaultElementTypeId(ElementTypeGroup.ViewTypeSection)
@@ -42,24 +49,26 @@ carp_list = door_types_ex + window_types_ex
 
 #Geometría de la sección
 def inst_width(instance):
-    if len(instance.GetParameters("Width")) == 1:
-        return instance.GetParameters("Width")[0].AsDouble()
+    if len(instance.GetParameters(par_get("Width"))) == 1:
+        return instance.GetParameters(par_get("Width"))[0].AsDouble()
     else:
-        return doc.GetElement(instance.GetTypeId()).GetParameters("Width")[0].AsDouble()
+        return doc.GetElement(instance.GetTypeId()).GetParameters(par_get("Width"))[0].AsDouble()
 
 def inst_height(instance):
-    if len(instance.GetParameters("Height")) == 1:
-        return instance.GetParameters("Height")[0].AsDouble()
+    if len(instance.GetParameters(par_get("Height"))) == 1:
+        return instance.GetParameters(par_get("Height"))[0].AsDouble()
     else:
-        return doc.GetElement(instance.GetTypeId()).GetParameters("Height")[0].AsDouble()
+        return doc.GetElement(instance.GetTypeId()).GetParameters(par_get("Height"))[0].AsDouble()
+
 
 boxes = list()
+plan_boxes = list()
 for element in carp_list:
     width = inst_width(element)
     height = inst_height(element)
+
     #Se ha fijado el offset a 1 pie. Afecta también al espacio entre secciones en la sheet
     offset = 1
-
     midpoint = element.Location.Point
     min = XYZ( -width/2 - offset, -(height/2 + midpoint.Z - doc.GetElement(element.LevelId).Elevation) - offset , -offset)
     max = XYZ( width/2 + offset, (height)/2 + offset , offset)
@@ -82,14 +91,31 @@ for element in carp_list:
     #box, view name, height, width
     boxes.append([new_bb, "MC-" + element.Symbol.Family.Name + "-" + element.Name, element.Id, section_height, section_width])
 
+    #plan boxes
+    plan_min = XYZ( -width/2 - offset, - offset , 0)
+    plan_max = XYZ( width/2 + offset, offset , height/2 + offset)
+
+    plan_transform = Transform.Identity
+    plan_transform.Origin = XYZ(midpoint.X, midpoint.Y, height/2 + midpoint.Z)
+    plan_transform.BasisX = normal.CrossProduct(up)
+    plan_transform.BasisY = normal.Negate()
+    plan_transform.BasisZ = up.Negate()
+
+    plan_bb = BoundingBoxXYZ()
+    plan_bb.Transform = plan_transform
+    plan_bb.Min = plan_min
+    plan_bb.Max = plan_max
+    plan_boxes.append([plan_bb, "PC-" + element.Symbol.Family.Name + "-" + element.Name, element.Id])
+
 #Transacción para la creación de secciones y sheet, y la colocación de las primeras en la segunda
 t = Transaction(doc,"Vistas Memoria Carpintería")
 t.Start()
 
 #Creación de tipo de secciones "Memoria Carpintería" (para separar las nuevas secciones en el navegador de proyecto)
 fec= FilteredElementCollector(doc).OfClass(ViewFamilyType).ToElements()
+building_section = "Building Section" if "Building Section" in [f.GetParameters(par_get("Type Name"))[0].AsString() for f in fec] else "Sección 1"
 for famtype in fec:
-	if famtype.GetParameters("Family Name")[0].AsString() == "Section" and famtype.GetParameters("Type Name")[0].AsString() == "Building Section":
+	if famtype.GetParameters(par_get("Family Name"))[0].AsString() == par_get("Section") and famtype.GetParameters(par_get("Type Name"))[0].AsString() == building_section:
 		viewtype = famtype
 		break
 mc = viewtype.Duplicate("Memoria Carpintería")
@@ -97,12 +123,18 @@ mc = viewtype.Duplicate("Memoria Carpintería")
 new_views = list()
 for line in boxes:
     section = ViewSection.CreateSection(doc, vft, line[0])
-    section.GetParameters("View Name")[0].Set(line[1])
+    section.GetParameters(par_get("View Name"))[0].Set(line[1])
     section.ChangeTypeId(mc.Id)
     #Se ha fijado la escala a 1:10
     scale = 10
     section.Scale = scale
     new_views.append([section, line[2], line[3], line[4]])
+
+#alzados
+for line in plan_boxes:
+    section = ViewSection.CreateSection(doc,vft,line[0])
+    section.GetParameters(par_get("View Name"))[0].Set(line[1])
+    section.ChangeTypeId(mc.Id)
 
 #Creación de sheet
 invalid_el_id = ElementId.InvalidElementId
