@@ -8,8 +8,8 @@ __author__  = 'Carlos Romero Carballo'
 import clr
 clr.AddReference('RevitAPI')
 from Autodesk.Revit.DB import *
-import Autodesk.Revit.UI.Selection
-
+from System.Collections.Generic import List
+import Autodesk.Revit.UI
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
 language = uidoc.Application.Application.Language
@@ -53,7 +53,6 @@ def inst_width(instance):
         return instance.GetParameters(par_get("Width"))[0].AsDouble()
     else:
         return doc.GetElement(instance.GetTypeId()).GetParameters(par_get("Width"))[0].AsDouble()
-
 def inst_height(instance):
     if len(instance.GetParameters(par_get("Height"))) == 1:
         return instance.GetParameters(par_get("Height"))[0].AsDouble()
@@ -70,6 +69,7 @@ for element in carp_list:
     #Se ha fijado el offset a 1 pie. Afecta también al espacio entre secciones en la sheet
     offset = 1
     midpoint = element.Location.Point
+    #PARA ALZADOS SE DEBERÍA METER MÁS OFFSET POR LA PARTE INTERIOR, PARA MOSTRAR LA APERTURA DE LA PUERTA O LA VENTANA
     min = XYZ( -width/2 - offset, -(height/2 + midpoint.Z - doc.GetElement(element.LevelId).Elevation) - offset , -offset)
     max = XYZ( width/2 + offset, (height)/2 + offset , offset)
     section_height = - min.Y + max.Y
@@ -85,6 +85,7 @@ for element in carp_list:
     transform.BasisZ = viewdir
 
     new_bb = BoundingBoxXYZ()
+    ###FALLA
     new_bb.Transform = transform
     new_bb.Min = min
     new_bb.Max = max
@@ -102,6 +103,7 @@ for element in carp_list:
     plan_transform.BasisZ = up.Negate()
 
     plan_bb = BoundingBoxXYZ()
+    ##### FALLA
     plan_bb.Transform = plan_transform
     plan_bb.Min = plan_min
     plan_bb.Max = plan_max
@@ -111,9 +113,11 @@ for element in carp_list:
 t = Transaction(doc,"Vistas Memoria Carpintería")
 t.Start()
 
+###### ESTO VARÍA PARA CADA ARCHIVO!!!"
 #Creación de tipo de secciones "Memoria Carpintería" (para separar las nuevas secciones en el navegador de proyecto)
 fec= FilteredElementCollector(doc).OfClass(ViewFamilyType).ToElements()
-building_section = "Building Section" if "Building Section" in [f.GetParameters(par_get("Type Name"))[0].AsString() for f in fec] else "Sección 1"
+#Section "Building Section"
+building_section = "Building Section" if "Building Section" in [f.GetParameters(par_get("Type Name"))[0].AsString() for f in fec] else "Sección"
 for famtype in fec:
 	if famtype.GetParameters(par_get("Family Name"))[0].AsString() == par_get("Section") and famtype.GetParameters(par_get("Type Name"))[0].AsString() == building_section:
 		viewtype = famtype
@@ -130,11 +134,14 @@ for line in boxes:
     section.Scale = scale
     new_views.append([section, line[2], line[3], line[4]])
 
-#alzados
+#cortes de planta
+new_plans = list()
 for line in plan_boxes:
     section = ViewSection.CreateSection(doc,vft,line[0])
     section.GetParameters(par_get("View Name"))[0].Set(line[1])
     section.ChangeTypeId(mc.Id)
+    section.Scale = scale
+    new_plans.append([section,line[2]])
 
 #Creación de sheet
 invalid_el_id = ElementId.InvalidElementId
@@ -145,21 +152,32 @@ sheet.SheetNumber = "A999"
 #Colocación de secciones en sheet
 coord = 0
 prev = 0
-for view in new_views:
+for view, plan in zip(new_views, new_plans):
     coord = prev + offset + view[3]
     Viewport.Create(doc, sheet.Id, view[0].Id, XYZ(coord/scale,view[2]/scale/2,0))
+    Viewport.Create(doc, sheet.Id, plan[0].Id, XYZ(coord/scale,-offset/scale,0))
     prev = coord
 
 t.Commit()
 
-#Transacción para aislar la carpintería en cada sección
-for view in new_views:
+#Transacciones para aislar la carpintería en cada sección - ALTERNATIVA: CREAR UNA VIEW TEMPLATE Y ASIGNARLA A LAS SECCIONES
+for view, plan in zip(new_views, new_plans):
     tra = Transaction(doc, "Aislar Carpinterías")
     uidoc.ActiveView = view[0]
     tra.Start()
     view[0].IsolateElementTemporary(view[1])
     view[0].ConvertTemporaryHideIsolateToPermanent()
     tra.Commit()
+    Autodesk.Revit.UI.UIView.Close(uidoc.GetOpenUIViews()[0])
+    tra2 = Transaction(doc, "Aislar Carpinterías")
+    uidoc.ActiveView = plan[0]
+    tra2.Start()
+    ####### ELEMENTOS SIN HOST
+    plan[0].IsolateElementsTemporary(List[ElementId]([plan[1],doc.GetElement(plan[1]).Host.Id]))
+    plan[0].ConvertTemporaryHideIsolateToPermanent()
+    tra2.Commit()
+    Autodesk.Revit.UI.UIView.Close(uidoc.GetOpenUIViews()[0])
+
 
 #Cambia la activeview para mostrar la memoria de carpintería creada
 uidoc.ActiveView = sheet
