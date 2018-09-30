@@ -1,5 +1,5 @@
 # coding: utf8
-"""Crea una sección para cada tipo de puerta y ventana en el proyecto, desde el exterior, con el nombre del tipo, y alberga estas secciones en la Sheet 999-Memoria Carpintería."""
+"""Crea una vista sección para cada tipo de puerta y ventana en el proyecto, desde el exterior, con el nombre del tipo, y alberga estas secciones en la Sheet 999-Memoria Carpintería."""
 
 #pyRevit info
 __title__ = 'Memoria\nCarpintería'
