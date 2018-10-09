@@ -50,7 +50,7 @@ for ph in doc.Phases:
     if ph.Name == 'New Construction' or ph.Name == 'Nueva construcción':
         phase = ph
         break
-#door element, id, fromRoom (id), toRoom (id), Width, height, wall (id)
+#door element, id, toRoom (id), fromRoom (id), Width, height, wall (id)
 door_matrix = [[door, door.Id, door.ToRoom[phase].Id if door.ToRoom[phase] != None else 0, door.FromRoom[phase].Id if door.FromRoom[phase] != None else 0,
 FeetToMeters(doc.GetElement(door.GetTypeId()).LookupParameter("Width").AsDouble()) if not door.LookupParameter("Width") else FeetToMeters(door.LookupParameter("Width").AsDouble()),\
 FeetToMeters(doc.GetElement(door.GetTypeId()).LookupParameter("Height").AsDouble()) if not door.LookupParameter("Height") else FeetToMeters(door.LookupParameter("Height").AsDouble()),\
@@ -96,12 +96,12 @@ def RoomCalc(room, excluded, hydro):
         skirting_length = 0
         for door in door_matrix:
             if door[6] == wall[3]:
-                if door[3] == room.Id or door[4] == room.Id:
+                if door[2] == room.Id or door[3] == room.Id:
                     opening_area += (door[4]*door[5])
                     skirting_length += door[4]
         for window in window_matrix:
             if window[6] == wall[3]:
-                if window[3] == room.Id or window[4] == room.Id:
+                if window[2] == room.Id or window[3] == room.Id:
                     opening_area += (window[4]*window[5])
         final_walls.append(wall + [opening_area] + [skirting_length])
     # now we have [ element, curve, hydro, id, opening_area, skirting_length ]
