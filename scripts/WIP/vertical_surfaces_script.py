@@ -8,33 +8,40 @@
 __title__ = 'Medición Acabados\nde Paredes'
 __author__  = 'Carlos Romero Carballo'
 
-import sys
-pyt_path = r'C:\Program Files (x86)\IronPython 2.7\Lib'
-sys.path.append(pyt_path)
-
 from pyrevit.coreutils import Timer
 timer = Timer()
 
-import clr
-clr.AddReference('RevitAPI')
+import Autodesk.Revit
 from Autodesk.Revit.DB import *
-
-import Autodesk
-clr.AddReference('RevitNodes')
-import Revit
-clr.ImportExtensions(Revit.GeometryConversion)
 
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
-fec_doors = FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
-fec_windows = FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Windows).WhereElementIsNotElementType().ToElements()
+
+#Phases (DE MOMENTO COGE 'NEW CONSTRUCTION' o 'NUEVA CONSTRUCCIÓN', AÑADIR SELECTOR)
+for ph in doc.Phases:
+    if ph.Name == 'New Construction' or ph.Name == 'Nueva construcción':
+        phase = ph
+        break
+
+fec_doors = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
+fec_windows = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Windows).WhereElementIsNotElementType().ToElements()
 doors = [element for element in fec_doors if element != None]
 windows = [element for element in fec_windows if element != None]
 
-def FeetToMeters(length):
-        return round(length * 0.3048, 3)
-def SqFeetToSqMeters(area):
-        return round(area * 0.09290304, 3)
+# SE ESTÁN RESTANDO LAS PUERTAS Y VENTANAS DE MUROS EXCLUIDOS
+class paquetito:
+    def __init__(self, door):
+        self.obj = door
+        self.id = door.Id
+        self.toroom = door.ToRoom[phase].Id if door.ToRoom[phase] != None else 0
+        self.fromroom = door.FromRoom[phase].Id if door.FromRoom[phase] != None else 0
+        self.width = doc.GetElement(door.GetTypeId()).LookupParameter("Width").AsDouble() if not door.LookupParameter("Width") else door.LookupParameter("Width").AsDouble()
+        self.height = doc.GetElement(door.GetTypeId()).LookupParameter("Height").AsDouble() if not door.LookupParameter("Height") else door.LookupParameter("Height").AsDouble()
+        self.host = door.Host.Id if door.Host != None else 0
+
+door_matrix = [paquetito(door) for door in doors]
+window_matrix = [paquetito(window) for window in windows]
+
 #excluded e hydro (ambos parámetros de tipo)
 fec_walls = FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Walls).WhereElementIsElementType().ToElements()
 hydro = list()
@@ -45,23 +52,10 @@ for tipo in fec_walls:
     if tipo.LookupParameter("MED_Excluido").AsInteger() == 1:
         excluded.append(tipo.LookupParameter("Type Name").AsString())
 
-#Phases (DE MOMENTO COGE 'NEW CONSTRUCTION' o 'NUEVA CONSTRUCCIÓN', AÑADIR SELECTOR)
-for ph in doc.Phases:
-    if ph.Name == 'New Construction' or ph.Name == 'Nueva construcción':
-        phase = ph
-        break
-#door element, id, toRoom (id), fromRoom (id), Width, height, wall (id)
-door_matrix = [[door, door.Id, door.ToRoom[phase].Id if door.ToRoom[phase] != None else 0, door.FromRoom[phase].Id if door.FromRoom[phase] != None else 0,
-FeetToMeters(doc.GetElement(door.GetTypeId()).LookupParameter("Width").AsDouble()) if not door.LookupParameter("Width") else FeetToMeters(door.LookupParameter("Width").AsDouble()),\
-FeetToMeters(doc.GetElement(door.GetTypeId()).LookupParameter("Height").AsDouble()) if not door.LookupParameter("Height") else FeetToMeters(door.LookupParameter("Height").AsDouble()),\
-door.Host.Id if door.Host != None else 0]\
-for door in doors]
-
-window_matrix = [[window, window.Id, window.ToRoom[phase].Id if window.ToRoom[phase] != None else 0, window.FromRoom[phase].Id if window.FromRoom[phase] != None else 0,\
-FeetToMeters(doc.GetElement(window.GetTypeId()).LookupParameter("Width").AsDouble()) if not window.LookupParameter("Width") else FeetToMeters(window.LookupParameter("Width").AsDouble()),\
-FeetToMeters(doc.GetElement(window.GetTypeId()).LookupParameter("Height").AsDouble()) if not window.LookupParameter("Height") else FeetToMeters(window.LookupParameter("Height").AsDouble()),\
-window.Host.Id if window.Host != None else 0]\
-for window in windows]
+def FeetToMeters(length):
+        return round(length * 0.3048, 3)
+def SqFeetToSqMeters(area):
+        return round(area * 0.09290304, 3)
 
 def RoomCalc(room, excluded, hydro):
     """excluded and hydro are lists of wall type names"""
@@ -81,7 +75,7 @@ def RoomCalc(room, excluded, hydro):
                 temp.append(boundary.GetCurve())
                 elements_and_curves.append(temp)
     # get room height
-    height = FeetToMeters(room.Volume / room.Area)
+    height = room.Volume / room.Area
     # get relevant walls
     relevant_walls_and_curves = list()
     for line in elements_and_curves:
@@ -95,25 +89,25 @@ def RoomCalc(room, excluded, hydro):
         opening_area = 0
         skirting_length = 0
         for door in door_matrix:
-            if door[6] == wall[3]:
-                if door[2] == room.Id or door[3] == room.Id:
-                    opening_area += (door[4]*door[5])
-                    skirting_length += door[4]
+            if door.host == wall[3]:
+                if door.toroom == room.Id or door.fromroom == room.Id:
+                    opening_area += (door.width*door.height)
+                    skirting_length += door.width
         for window in window_matrix:
-            if window[6] == wall[3]:
-                if window[2] == room.Id or window[3] == room.Id:
-                    opening_area += (window[4]*window[5])
+            if window.host == wall[3]:
+                if window.toroom == room.Id or window.fromroom == room.Id:
+                    opening_area += (window.width*window.height)
         final_walls.append(wall + [opening_area] + [skirting_length])
     # now we have [ element, curve, hydro, id, opening_area, skirting_length ]
     vert_area = 0
     hydro_area = 0
     skirt_len = 0
     for wall in final_walls:
-        vert_area += (FeetToMeters(wall[1].Length) * height) - wall[4]
-        skirt_len += FeetToMeters(wall[1].Length) - wall[5]
+        vert_area += (wall[1].Length * height) - wall[4]
+        skirt_len += wall[1].Length - wall[5]
         if wall[2] == True:
-            hydro_area += (FeetToMeters(wall[1].Length) * height) - wall[4]
-    return room, vert_area, hydro_area, skirt_len
+            hydro_area += (wall[1].Length * height) - wall[4]
+    return room, SqFeetToSqMeters(vert_area), SqFeetToSqMeters(hydro_area), FeetToMeters(skirt_len)
 
 data = list()
 for room in FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Rooms).WhereElementIsNotElementType().ToElements():
