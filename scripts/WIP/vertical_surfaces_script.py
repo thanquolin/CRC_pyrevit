@@ -28,19 +28,21 @@ fec_windows = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Windo
 doors = [element for element in fec_doors if element != None]
 windows = [element for element in fec_windows if element != None]
 
-# SE ESTÁN RESTANDO LAS PUERTAS Y VENTANAS DE MUROS EXCLUIDOS
 class paquetito:
-    def __init__(self, door):
-        self.obj = door
-        self.id = door.Id
-        self.toroom = door.ToRoom[phase].Id if door.ToRoom[phase] != None else 0
-        self.fromroom = door.FromRoom[phase].Id if door.FromRoom[phase] != None else 0
-        self.width = doc.GetElement(door.GetTypeId()).LookupParameter("Width").AsDouble() if not door.LookupParameter("Width") else door.LookupParameter("Width").AsDouble()
-        self.height = doc.GetElement(door.GetTypeId()).LookupParameter("Height").AsDouble() if not door.LookupParameter("Height") else door.LookupParameter("Height").AsDouble()
-        self.host = door.Host.Id if door.Host != None else 0
+    def __init__(self, instance):
+        self.obj = instance
+        self.id = instance.Id
+        self.toroom = instance.ToRoom[phase].Id if instance.ToRoom[phase] != None else 0
+        self.fromroom = instance.FromRoom[phase].Id if instance.FromRoom[phase] != None else 0
+        self.width = doc.GetElement(instance.GetTypeId()).LookupParameter("Width").AsDouble() if not instance.LookupParameter("Width") else instance.LookupParameter("Width").AsDouble()
+        self.height = doc.GetElement(instance.GetTypeId()).LookupParameter("Height").AsDouble() if not instance.LookupParameter("Height") else instance.LookupParameter("Height").AsDouble()
+        self.hostid = instance.Host.Id if instance.Host != None else 0
+        self.hydro = doc.GetElement(instance.Host.GetTypeId()).GetParameters("MED_Hidrofugado")[0].AsInteger() == 1
 
-door_matrix = [paquetito(door) for door in doors]
-window_matrix = [paquetito(window) for window in windows]
+
+#Ignoramos las puertas y ventanas en muros excluidos (para no restarlos de la medición)
+door_matrix = [paquetito(door) for door in doors if doc.GetElement(door.Host.GetTypeId()).GetParameters("MED_Excluido")[0].AsInteger() == 0]
+window_matrix = [paquetito(window) for window in windows if doc.GetElement(window.Host.GetTypeId()).GetParameters("MED_Excluido")[0].AsInteger() == 0]
 
 #excluded e hydro (ambos parámetros de tipo)
 fec_walls = FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Walls).WhereElementIsElementType().ToElements()
@@ -81,24 +83,30 @@ def RoomCalc(room, excluded, hydro):
     for line in elements_and_curves:
         if line[0].Category.Name == 'Walls':
             if line[0].Name not in excluded and line[0].WallType.FamilyName != 'Curtain Wall' if line[0].ToString() != 'Autodesk.Revit.DB.FamilyInstance' else False:
-                relevant_walls_and_curves.append(line + [line[0].Name in hydro] + [line[0].Id])
+                relevant_walls_and_curves.append(line + [line[0].Name in hydro, line[0].Id])
     # now we have [ element, curve, hydro, id ]
     # add area of wall hosted doors and windows from or to that room
     final_walls = list()
     for wall in relevant_walls_and_curves:
         opening_area = 0
-        skirting_length = 0
+        hydro_opening_area = 0
+        skirting_cut = 0
         for door in door_matrix:
-            if door.host == wall[3]:
+            if door.hostid == wall[3]:
                 if door.toroom == room.Id or door.fromroom == room.Id:
                     opening_area += (door.width*door.height)
-                    skirting_length += door.width
+                    skirting_cut += door.width
+                    if room.GetParameters("MED_Cuarto húmedo")[0].AsInteger() == 1 and wall[2]:
+                        hydro_opening_area += (door.width*door.height)
         for window in window_matrix:
-            if window.host == wall[3]:
+            if window.hostid == wall[3]:
                 if window.toroom == room.Id or window.fromroom == room.Id:
                     opening_area += (window.width*window.height)
-        final_walls.append(wall + [opening_area] + [skirting_length])
-    # now we have [ element, curve, hydro, id, opening_area, skirting_length ]
+                    if room.GetParameters("MED_Cuarto húmedo")[0].AsInteger() == 1 and wall[2]:
+                        hydro_opening_area += (window.width*window.height)
+        final_walls.append(wall + [opening_area, skirting_cut, hydro_opening_area])
+    # now we have [ element, curve, hydro, id, opening_area, skirting_cut, hydro_opening_area ]
+    # LOS PANELES HIDROFUGADOS VAN HASTA EL TECHO, EL ACABADO NO
     vert_area = 0
     hydro_area = 0
     skirt_len = 0
@@ -106,8 +114,8 @@ def RoomCalc(room, excluded, hydro):
         vert_area += (wall[1].Length * height) - wall[4]
         skirt_len += wall[1].Length - wall[5]
         if wall[2] == True:
-            hydro_area += (wall[1].Length * height) - wall[4]
-    return room, SqFeetToSqMeters(vert_area), SqFeetToSqMeters(hydro_area), FeetToMeters(skirt_len)
+            hydro_area += (wall[1].Length * height) - wall[6]
+    return room, SqFeetToSqMeters(vert_area), SqFeetToSqMeters(hydro_area) if room.GetParameters("MED_Cuarto húmedo")[0].AsInteger() == 1 else 0, FeetToMeters(skirt_len)
 
 data = list()
 for room in FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Rooms).WhereElementIsNotElementType().ToElements():
