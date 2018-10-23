@@ -55,9 +55,9 @@ for tipo in fec_walls:
         excluded.append(tipo.LookupParameter("Type Name").AsString())
 
 def FeetToMeters(length):
-        return round(length * 0.3048, 3)
+        return round(length * 0.3048, 2)
 def SqFeetToSqMeters(area):
-        return round(area * 0.09290304, 3)
+        return round(area * 0.09290304, 2)
 
 def RoomCalc(room, excluded, hydro):
     """excluded and hydro are lists of wall type names"""
@@ -107,6 +107,7 @@ def RoomCalc(room, excluded, hydro):
         final_walls.append(wall + [opening_area, skirting_cut, hydro_opening_area])
     # now we have [ element, curve, hydro, id, opening_area, skirting_cut, hydro_opening_area ]
     # LOS PANELES HIDROFUGADOS VAN HASTA EL TECHO, EL ACABADO NO
+    # RESTA LA VENTANA ENTERA DE DONDE TENGA EL RCP, Y DEL MURO DONDE ESTÉ HOSTEADA
     vert_area = 0
     hydro_area = 0
     skirt_len = 0
@@ -115,7 +116,7 @@ def RoomCalc(room, excluded, hydro):
         skirt_len += wall[1].Length - wall[5]
         if wall[2] == True:
             hydro_area += (wall[1].Length * height) - wall[6]
-    return room, SqFeetToSqMeters(vert_area), SqFeetToSqMeters(hydro_area) if room.GetParameters("MED_Cuarto húmedo")[0].AsInteger() == 1 else 0, FeetToMeters(skirt_len)
+    return room, SqFeetToSqMeters(vert_area), SqFeetToSqMeters(hydro_area) if room.GetParameters("MED_Cuarto húmedo")[0].AsInteger() == 1 else 0.0, FeetToMeters(skirt_len)
 
 data = list()
 for room in FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Rooms).WhereElementIsNotElementType().ToElements():
