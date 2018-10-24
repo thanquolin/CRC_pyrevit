@@ -1,11 +1,10 @@
 # coding: utf8
-"""Inscribe la superficie neta de acabado vertical de las habitaciones, la parte de esa superficie perteneciente a tabiques de pladur, y la longitud de los rodapiés.\
- Son necesarios 4 parámetros instancia de habitación en el proyecto: MED_Área neta de superficie vertical (Área), MED_Área vertical hidrofugada (Área),\
- MED_Rodapié (Longitud), MED_Cuarto húmedo (Sí/No), y 2 parámetros de tipo de muro: MED_Excluido (Sí/No), MED_Hidrofugado (Sí/No),\
- que indican si el muro tiene acabado y si el tipo de muro va hidrofugado cuando da a un cuarto húmedo, respectivamente."""
+"""Inscribe la superficie neta de acabado vertical de las habitaciones, y la longitud de los rodapiés.\
+ Son necesarios 2 parámetros instancia de habitación en el proyecto: MED_Área neta de superficie vertical (Área)\
+ y MED_Rodapié (Longitud), y un parámetro de tipo de muro: MED_Excluido (Sí/No), que indica si el muro tiene acabado."""
 
 #pyRevit info
-__title__ = 'Medición Acabados\nde Paredes'
+__title__ = 'Medición Simplificada\nAcabados de Paredes'
 __author__  = 'Carlos Romero Carballo'
 
 from pyrevit.coreutils import Timer
@@ -37,7 +36,6 @@ class paquetito:
         self.width = doc.GetElement(instance.GetTypeId()).LookupParameter("Width").AsDouble() if not instance.LookupParameter("Width") else instance.LookupParameter("Width").AsDouble()
         self.height = doc.GetElement(instance.GetTypeId()).LookupParameter("Height").AsDouble() if not instance.LookupParameter("Height") else instance.LookupParameter("Height").AsDouble()
         self.hostid = instance.Host.Id if instance.Host != None else 0
-        self.hydro = doc.GetElement(instance.Host.GetTypeId()).GetParameters("MED_Hidrofugado")[0].AsInteger() == 1
 
 
 #Ignoramos las puertas y ventanas en muros excluidos (para no restarlos de la medición)
@@ -46,11 +44,8 @@ window_matrix = [paquetito(window) for window in windows if doc.GetElement(windo
 
 #excluded e hydro (ambos parámetros de tipo)
 fec_walls = FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Walls).WhereElementIsElementType().ToElements()
-hydro = list()
 excluded = list()
 for tipo in fec_walls:
-    if tipo.LookupParameter("MED_Hidrofugado").AsInteger() == 1:
-        hydro.append(tipo.LookupParameter("Type Name").AsString())
     if tipo.LookupParameter("MED_Excluido").AsInteger() == 1:
         excluded.append(tipo.LookupParameter("Type Name").AsString())
 
@@ -59,7 +54,7 @@ def FeetToMeters(length):
 def SqFeetToSqMeters(area):
         return round(area * 0.09290304, 2)
 
-def RoomCalc(room, excluded, hydro):
+def RoomCalc(room, excluded):
     """excluded and hydro are lists of wall type names"""
     calculator = SpatialElementGeometryCalculator(doc)
     options = Autodesk.Revit.DB.SpatialElementBoundaryOptions()
@@ -83,55 +78,45 @@ def RoomCalc(room, excluded, hydro):
     for line in elements_and_curves:
         if line[0].Category.Name == 'Walls':
             if line[0].Name not in excluded and line[0].WallType.FamilyName != 'Curtain Wall' if line[0].ToString() != 'Autodesk.Revit.DB.FamilyInstance' else False:
-                relevant_walls_and_curves.append(line + [line[0].Name in hydro, line[0].Id])
-    # now we have [ element, curve, hydro, id ]
+                relevant_walls_and_curves.append(line + [line[0].Id])
+    # now we have [ element, curve, id ]
     # add area of wall hosted doors and windows from or to that room
     final_walls = list()
     for wall in relevant_walls_and_curves:
         opening_area = 0
-        hydro_opening_area = 0
         skirting_cut = 0
         for door in door_matrix:
-            if door.hostid == wall[3]:
+            if door.hostid == wall[2]:
                 if door.toroom == room.Id or door.fromroom == room.Id:
                     opening_area += (door.width*door.height)
                     skirting_cut += door.width
-                    if room.GetParameters("MED_Cuarto húmedo")[0].AsInteger() == 1 and wall[2]:
-                        hydro_opening_area += (door.width*door.height)
         for window in window_matrix:
-            if window.hostid == wall[3]:
+            if window.hostid == wall[2]:
                 if window.toroom == room.Id or window.fromroom == room.Id:
                     opening_area += (window.width*window.height)
-                    if room.GetParameters("MED_Cuarto húmedo")[0].AsInteger() == 1 and wall[2]:
-                        hydro_opening_area += (window.width*window.height)
-        final_walls.append(wall + [opening_area, skirting_cut, hydro_opening_area])
-    # now we have [ element, curve, hydro, id, opening_area, skirting_cut, hydro_opening_area ]
+        final_walls.append(wall + [opening_area, skirting_cut])
+    # now we have [ element, curve, id, opening_area, skirting_cut ]
     # LOS PANELES HIDROFUGADOS VAN HASTA EL TECHO, EL ACABADO NO
     # RESTA LA VENTANA ENTERA DE DONDE TENGA EL RCP, Y DEL MURO DONDE ESTÉ HOSTEADA
     vert_area = 0
-    hydro_area = 0
     skirt_len = 0
     for wall in final_walls:
-        vert_area += (wall[1].Length * height) - wall[4]
-        skirt_len += wall[1].Length - wall[5]
-        if wall[2] == True:
-            hydro_area += (wall[1].Length * height) - wall[6]
-    return room, SqFeetToSqMeters(vert_area), SqFeetToSqMeters(hydro_area) if room.GetParameters("MED_Cuarto húmedo")[0].ToInteger() == 1 else 0, FeetToMeters(skirt_len)
+        vert_area += (wall[1].Length * height) - wall[3]
+        skirt_len += wall[1].Length - wall[4]
+    return room, SqFeetToSqMeters(vert_area), FeetToMeters(skirt_len)
 
 data = list()
 for room in FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Rooms).WhereElementIsNotElementType().ToElements():
-    data.append(RoomCalc(room,excluded,hydro))
+    data.append(RoomCalc(room,excluded))
 t = Transaction(doc,"Cálculo Áreas Habitaciones")
 t.Start()
 for line in data:
-    print("Habitación" + line[0].LookupParameter("Number").AsString() + " - " + line[0].LookupParameter("Name").AsString() + ": MED_VERT " + str(line[1]) + " m2, MED_HYDRO " + str(line[2]) + " m2, MED_ROD " + str(line[3]) + " m." )
+    print("Habitación" + line[0].LookupParameter("Number").AsString() + " - " + line[0].LookupParameter("Name").AsString() + ": MED_VERT " + str(line[1]) + " m2, MED_ROD " + str(line[2]) + " m." )
     line[0].LookupParameter("MED_Área neta de superficie vertical").SetValueString(str(line[1])+" m²")
-    line[0].LookupParameter("MED_Área vertical hidrofugada").SetValueString(str(line[2])+" m²")
-    line[0].LookupParameter("MED_Rodapié").SetValueString(str(line[3])+" m")
+    line[0].LookupParameter("MED_Rodapié").SetValueString(str(line[2])+" m")
 t.Commit()
 
 # COMPROBAR QUE EL PARÁMETRO EXISTE, ETC
-# AÑADIR LA MEDICIÓN DE HYDRO POR TIPO DE MURO
 
 #REPORT TIME
 endtime ="\nHe tardado " + str(timer.get_time())[:3] + " segundos en llevar a cabo esta tarea."
