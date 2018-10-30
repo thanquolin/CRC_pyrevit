@@ -116,11 +116,12 @@ def RoomCalc(room, excluded, hydro):
         skirt_len += wall[1].Length - wall[5]
         if wall[2] == True:
             hydro_area += (wall[1].Length * height) - wall[6]
-    return room, SqFeetToSqMeters(vert_area), SqFeetToSqMeters(hydro_area) if room.GetParameters("MED_Cuarto húmedo")[0].ToInteger() == 1 else 0, FeetToMeters(skirt_len)
+    return room, SqFeetToSqMeters(vert_area), SqFeetToSqMeters(hydro_area) if room.GetParameters("MED_Cuarto húmedo")[0].AsInteger() == 1 else 0, FeetToMeters(skirt_len)
 
 data = list()
 for room in FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Rooms).WhereElementIsNotElementType().ToElements():
-    data.append(RoomCalc(room,excluded,hydro))
+    if room.get_Parameter(BuiltInParameter.ROOM_AREA).AsDouble() != 0.0:
+        data.append(RoomCalc(room,excluded,hydro))
 t = Transaction(doc,"Cálculo Áreas Habitaciones")
 t.Start()
 for line in data:
