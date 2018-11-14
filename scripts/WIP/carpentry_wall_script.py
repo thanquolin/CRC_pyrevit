@@ -22,7 +22,7 @@ def m_to_feet(m):
 
 #Nearest level to Elevation 0
 levels = FilteredElementCollector(doc).OfClass(Level).ToElements()
-level_dic = {level.Elevation:level for level in levels}
+level_dic = {round(level.Elevation,3):level for level in levels}
 level = level_dic[min([abs(val) for val in level_dic.keys()])]
 
 #Lenguaje
