@@ -24,6 +24,11 @@ for ph in doc.Phases:
         phase = ph
         break
 
+def existe(carp,phase):
+    creada = doc.GetElement(carp.CreatedPhaseId).GetParameters("Sequence Number")[0].AsInteger() <= phase.GetParameters("Sequence Number")[0].AsInteger()
+    no_demo = doc.GetElement(carp.DemolishedPhaseId).GetParameters("Sequence Number")[0].AsInteger() > phase.GetParameters("Sequence Number")[0].AsInteger() if carp.DemolishedPhaseId.IntegerValue != -1 else True
+    return creada and no_demo
+
 fec_doors = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
 fec_windows = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Windows).WhereElementIsNotElementType().ToElements()
 doors = [element for element in fec_doors if element != None]
@@ -42,8 +47,8 @@ class paquetito:
 
 
 #Ignoramos las puertas y ventanas en muros excluidos (para no restarlos de la medición)
-door_matrix = [paquetito(door) for door in doors if doc.GetElement(door.Host.GetTypeId()).GetParameters("EXCLUIDO")[0].AsInteger() == 0 and door.CreatedPhaseId == ph.Id]
-window_matrix = [paquetito(window) for window in windows if doc.GetElement(window.Host.GetTypeId()).GetParameters("EXCLUIDO")[0].AsInteger() == 0 and window.CreatedPhaseId == ph.Id]
+door_matrix = [paquetito(door) for door in doors if doc.GetElement(door.Host.GetTypeId()).GetParameters("EXCLUIDO")[0].AsInteger() == 0 and existe(door,phase)]
+window_matrix = [paquetito(window) for window in windows if doc.GetElement(window.Host.GetTypeId()).GetParameters("EXCLUIDO")[0].AsInteger() == 0 and existe(window,phase)]
 
 #excluded e hydro (ambos parámetros de tipo)
 fec_walls = FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Walls).WhereElementIsElementType().ToElements()
@@ -121,7 +126,7 @@ def RoomCalc(room, excluded, hydro):
 
 data = list()
 for room in FilteredElementCollector(doc).OfCategory(Autodesk.Revit.DB.BuiltInCategory.OST_Rooms).WhereElementIsNotElementType().ToElements():
-    if room.get_Parameter(BuiltInParameter.ROOM_AREA).AsDouble() != 0.0:
+    if room.get_Parameter(BuiltInParameter.ROOM_AREA).AsDouble() != 0.0 and room.GetParameters("Phase")[0].AsElementId() == phase.Id:
         data.append(RoomCalc(room,excluded,hydro))
 t = Transaction(doc,"Cálculo Áreas Habitaciones")
 t.Start()
