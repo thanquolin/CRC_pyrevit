@@ -17,7 +17,7 @@ uidoc = __revit__.ActiveUIDocument
 #(A) No sigue si hay habitaciones de área 0 en el modelo.
 for room in FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rooms).ToElements():
     if not room.Area:
-        raise ValueError("Hay habitaciones Not placed, Redundant o Not Enclosed en el modelo (con área 0).")
+        raise ValueError("Hay habitaciones Not placed, Redundant o Not Enclosed en el modelo (con area 0).")
 
 #(B) y (C) Listados de habitaciones de PMA y Revit.
 class PMAroom:
@@ -53,12 +53,13 @@ class PMAroom:
 #(B) PMArooms desde PMAroom.
 PMArooms_from_PMA = list()
 
-with open(r"C:\Users\carlosromero\Desktop\PMA_REVIT_CARLOS.csv", "rb") as csvfile:
+with open(r"C:\Users\carlosromero\Desktop\PMA_REVIT_CARLOS.csv", "r") as csvfile:
     reader = csv.reader(csvfile, delimiter = ';', quotechar = "|")
     for row in reader:
         if row[0]:
             PMArooms_from_PMA.append(PMAroom(row[0],row[2],row[4],row[6],row[8],row[10],row[11],row[13],row[14]))
-
+            print(row[2])+row[3]+row[4]+row[6])
+print("PMArooms_from_PMA: " + str(len(PMArooms_from_PMA)))
 #(C) PMArooms desde Revit.
 valid_rooms = [room for room in FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rooms).ToElements() if room.Area]
 def PMAroom_from_Revit(room):
@@ -81,12 +82,12 @@ def PMAroom_from_Revit(room):
     )
 #revit_rooms puede contener habitaciones duplicadas o erróneas que hay que filtrar y listar.
 revit_rooms = [PMAroom_from_Revit(room) for room in valid_rooms]
-
+print("revit_rooms: " + str(len(revit_rooms)))
 #(D) Habitaciones erróneas (tienen que irse fuera primero, no queremos que aparezcan en el listado de duplicadas en el caso de estar mal y además duplicadas)
 def roomOk(room):
     '''Acepta objetos PMAroom, los compara con PMArooms_from_PMA, y determina si coincide con alguna combinación de código de grupo, nombres (1-4) y name.'''
     for instance in PMArooms_from_PMA:
-        if room.sameGroup(instace):
+        if room.sameGroup(instance):
             return True
     return False
 #(E) Habitaciones duplicadas (sean duplicadas de las originales del PMA o de las que se han creado nuevas).
@@ -108,5 +109,33 @@ for room in revit_rooms:
         duplicate_rooms.append(room)
     else:
         comparison_rooms.append(room)
+print("wrong_rooms: " + str(len(wrong_rooms)))
+print("duplicate_rooms: " + str(len(duplicate_rooms)))
+print("comparison_rooms: " + str(len(comparison_rooms)))
+#(F) y (G) Exportación de las listas de erróneas y duplicadas (excel o pantalla?)
 
-# (F) y (G) Exportación de las listas de erróneas y duplicadas (excel o pantalla?)
+#(H) Diccionario de grupos.
+group_dictionary = dict()
+
+for room in comparison_rooms:
+    if room.group not in group_dictionary.keys():
+        group_dictionary[room.group] = [room]
+    else:
+        prev = group_dictionary[room.group]
+        group_dictionary[room.group] = prev + [room]
+
+#(I) Diferencia sup. nº instancias por grupo.
+comparison = list()
+
+def insts_sup(*args):
+    i_s = [0,0]
+    for arg in args:
+        i_s[0] += 1
+        i_s[0] += arg.sup
+    return i_s
+
+for group in sorted(group_dictionary.keys()):
+    comparison.append( ["Hola"] + insts_sup(group_dictionary[group]))
+# hay que sacar los grupos del pma , relacionarlo con las nuevas y meterle los dos campos
+
+print(comparison)
