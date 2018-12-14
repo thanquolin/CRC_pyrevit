@@ -58,7 +58,7 @@ with open(r"C:\Users\carlosromero\Desktop\PMA_REVIT_CARLOS.csv", "r") as csvfile
     for row in reader:
         if row[0]:
             PMArooms_from_PMA.append(PMAroom(row[0].decode('utf-8'),row[2].decode('utf-8'),row[4].decode('utf-8'),row[6].decode('utf-8'),row[8].decode('utf-8'),row[10].decode('utf-8'),row[11].decode('utf-8'),row[13].decode('utf-8'),row[14].decode('utf-8')))
-            print(row[2].decode('utf-8')+row[3].decode('utf-8')+row[4].decode('utf-8')+row[6].decode('utf-8'))
+
 print("PMArooms_from_PMA: " + str(len(PMArooms_from_PMA)))
 #(C) PMArooms desde Revit.
 valid_rooms = [room for room in FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rooms).ToElements() if room.Area]
