@@ -23,7 +23,7 @@ type_cod_carp = ["" if type(doc.GetElement(id).LookupParameter("Código Carpinte
 type_tipo_carp = ["" if type(doc.GetElement(id).LookupParameter("Tipo de Carpinteria").AsString()) != type("a") else doc.GetElement(id).LookupParameter("Tipo de Carpinteria").AsString() for id in type_ids]
 
 if len(type_ids) == 0:
-    print("No hay instancias de ventanas o puertas en el modelo")
+    print("No hay instancias de ventanas o puertas en el modelo.")
 else:
     t = Transaction(doc,"Codificación Carpinterías")
     t.Start()
