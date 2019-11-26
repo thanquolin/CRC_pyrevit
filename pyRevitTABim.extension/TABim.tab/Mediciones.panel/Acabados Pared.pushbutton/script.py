@@ -42,10 +42,15 @@ class MEDFam():
     def __init__(self, dbElement):
         self.dbElement = dbElement
         self.id = dbElement.Id
-        self.toRoomId = dbElement.ToRoom[phase].Id if dbElement.ToRoom[phase] != None else Autodesk.Revit.DB.ElementId.InvalidElementId
-        self.fromRoomId = dbElement.FromRoom[phase].Id if dbElement.FromRoom[phase] != None else Autodesk.Revit.DB.ElementId.InvalidElementId
-        self.width = doc.GetElement(dbElement.GetTypeId()).LookupParameter("Width").AsDouble() if not dbElement.LookupParameter("Width") else dbElement.LookupParameter("Width").AsDouble()
-        self.height = doc.GetElement(dbElement.GetTypeId()).LookupParameter("Height").AsDouble() if not dbElement.LookupParameter("Height") else dbElement.LookupParameter("Height").AsDouble()
+        self.toRoomId = dbElement.ToRoom[phase].Id if dbElement.ToRoom[phase] != None \
+                        else Autodesk.Revit.DB.ElementId.InvalidElementId
+        self.fromRoomId = dbElement.FromRoom[phase].Id if dbElement.FromRoom[phase] != None \
+                        else Autodesk.Revit.DB.ElementId.InvalidElementId
+        def dim(par):
+            return dbElement.Symbol.GetParameters(par)[0].AsDouble() if not dbElement.GetParameters(par) \
+                   else dbElement.GetParameters(par)[0].AsDouble()
+        self.width = dim("Width")
+        self.height = dim("Height")
         self.hostId = dbElement.Host.Id if dbElement.Host != None else Autodesk.Revit.DB.ElementId.InvalidElementId
 
 class MEDDoor(MEDFam):
