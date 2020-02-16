@@ -7,6 +7,8 @@
 __title__ = 'Aplicar Colores de\nPlantilla a DWG'
 __author__  = 'Carlos Romero Carballo'
 
+from pyrevit.coreutils import Timer
+timer = Timer()
 import csv
 import clr
 import os.path
@@ -15,8 +17,8 @@ from Autodesk.Revit.DB import *
 
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
-plantilla_dwg_path = "C:\ProgramData\pyRevit\pyRevit-v45\pyRevit\extensions\pyRevitEAS.extension\EAS.tab\Utilidades.panel\Colores DWG.pushbutton\dwg_to_rgb.csv"
-plantilla_capas_path = "C:\ProgramData\pyRevit\pyRevit-v45\pyRevit\extensions\pyRevitEAS.extension\EAS.tab\Utilidades.panel\Colores DWG.pushbutton\plantilla_capas.csv"
+plantilla_dwg_path = "C:\ProgramData\pyRevit\pyRevit-v45\pyRevit\extensions\pyRevitTABim.extension\TABim.tab\Utilidades.panel\Colores DWG.pushbutton\dwg_to_rgb.csv"
+plantilla_capas_path = "C:\ProgramData\pyRevit\pyRevit-v45\pyRevit\extensions\pyRevitTABim.extension\TABim.tab\Utilidades.panel\Colores DWG.pushbutton\plantilla_capas.csv"
 cads_categories = [cat for cat in doc.Settings.Categories if cat.Name.ToString().endswith(".dwg")]
 capas_dwg = [item for sublist in [cat.SubCategories for cat in doc.Settings.Categories if cat.Name.ToString().endswith(".dwg")] for item in sublist]
 
@@ -54,7 +56,7 @@ else:
         if capa.Name in plantilla_colores.keys():
             capa.LineColor = plantilla_colores[capa.Name]
             print("Color de Capa '{}' cambiado en '{}'.".format(capa.Name,capa.Parent.Name))
-    #Movemos los cad para que se regeneren, mostrando los cambios en color.
+    #Movemos los cad para que se recarguen, mostrando los cambios en color.
     for cad in [item for sublist in [FilteredElementCollector(doc).OfCategoryId(cat.Id).WhereElementIsNotElementType().ToElements()\
      for cat in doc.Settings.Categories if cat.Name.ToString()[-4:] == ".dwg"] for item in sublist]:
         if cad.Pinned == False:
@@ -66,3 +68,6 @@ else:
             ElementTransformUtils.MoveElement(doc, cad.Id, XYZ.BasisX.Negate())
             cad.Pinned = True
     t.Commit()
+
+endtime ="\nHe tardado " + str(round(timer.get_time(),2)) + " segundos en llevar a cabo esta tarea."
+print(endtime)

@@ -5,12 +5,21 @@ modeladas. No usar dobles guiones en ninguno de los dos parámetros ni en los no
 __title__ = 'Añadir/Actualizar\nCodificación\nCarpinterías'
 __author__  = 'Carlos Romero Carballo'
 
+#IMPORTS
+
+#for timing
+from pyrevit.coreutils import Timer
+timer = Timer()
+
+#for the script to work
 import clr
 import Autodesk.Revit.DB as DB
 from Autodesk.Revit.DB import *
 
+#VARIABLES
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
+
 
 #Selection of family types of selected element category.
 #We select all model instances instead of types to affect only types of modelled instances.
@@ -37,3 +46,7 @@ else:
             doc.GetElement(id).Name = updated_name
             print("Tipo '" + name + "' actualizado a '" + updated_name + "'.")
     t.Commit()
+
+#report time
+endtime ="\nHe tardado " + str(timer.get_time()) + " segundos en llevar a cabo esta tarea."
+print(endtime)
