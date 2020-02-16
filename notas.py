@@ -24,3 +24,8 @@ solids = [solid for solid in el.get_Geometry(Options())]
 #Elemento.Método.Overloads.Functions[índice](resto de variables)
 
 solid_A.Intersect.Overloads.Functions[2](solid_B)
+
+#Para importar las colecciones de .Net y poder darle a la api ICollections
+
+import System.Collections.Generic as col
+doc.Delete(col.List[ElementId]([ElementId(1234),ElementId(3456]))
