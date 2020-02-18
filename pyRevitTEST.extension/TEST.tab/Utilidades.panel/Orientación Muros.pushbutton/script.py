@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Writes wall orientation in "Orientation" parameter if it exists."""
 #pyRevit info
 __title__ = 'Wall\norientation'
