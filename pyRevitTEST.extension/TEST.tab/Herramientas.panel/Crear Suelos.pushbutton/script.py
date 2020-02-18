@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 """Crea suelos del tipo elegido en todas las habitaciones del nivel de la planta actual (No comprueba si hay suelos ya creados en las habitaciones, cuidado con los duplicados)."""
 #pyRevit info
 __title__ = 'Crear Suelos\nen Habitaciones'
