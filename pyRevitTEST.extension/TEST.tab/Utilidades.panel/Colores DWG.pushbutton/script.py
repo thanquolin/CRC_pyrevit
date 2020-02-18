@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 """Modifica los colores de las capas de los DWG importados
  si sus nombres están en la plantilla "plantilla_capas.csv"
  (primera columna nombres, segunda columna código 0-255 de color)
