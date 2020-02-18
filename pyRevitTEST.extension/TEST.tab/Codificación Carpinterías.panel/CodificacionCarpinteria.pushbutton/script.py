@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 """Añade o actualiza la combinación de parámetros 'Tipo de Carpintería' y 'Código Carpintería' delante del nombre de los tipos de Puertas o Ventanas que tengan instancias
 modeladas. No usar dobles guiones en ninguno de los dos parámetros ni en los nombres de tipo."""
 #pyRevit info
