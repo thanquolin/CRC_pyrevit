@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 """Elimina la combinación de parámetros 'Tipo de Carpintería' y 'Código Carpintería' del inicio del nombre de los tipos de Puertas o Ventanas cargados en el modelo.
 No usar dobles guiones en ninguno de los dos parámetros ni en los nombres de tipo."""
 #pyRevit info
