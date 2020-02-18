@@ -1,4 +1,4 @@
-#coding: utf8
+# -*- coding: utf-8 -*-
 """Inscribe la superficie neta de acabado vertical de las habitaciones, la parte de esa superficie perteneciente a tabiques de pladur, y la longitud de los rodapiés.\
  Son necesarios 4 parámetros instancia de habitación en el proyecto: MED_Área neta de superficie vertical (Área), MED_Área vertical hidrofugada (Área),\
  MED_Rodapié (Longitud), MED_Cuarto húmedo (Sí/No), y 2 parámetros de tipo de muro: MED_Excluido (Sí/No), MED_Hidrofugado (Sí/No),\
