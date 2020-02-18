@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 """Alinea scope boxes, secciones y alzados a muros, model lines y rejillas. Se selecciona primero la referencia y luego la vista o scope box."""
 
 #pyRevit info
