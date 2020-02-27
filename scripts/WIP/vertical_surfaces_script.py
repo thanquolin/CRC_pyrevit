@@ -1,4 +1,5 @@
 # coding: utf8
+# VERSION ANTIGUA, NO USAR!!!
 """Inscribe la superficie neta de acabado vertical de las habitaciones, la parte de esa superficie perteneciente a tabiques de pladur, y la longitud de los rodapiés.\
  Son necesarios 4 parámetros instancia de habitación en el proyecto: PARED NETA (Área), PARED NETA CARTON YESO (Área),\
  RODAPIE (Longitud), CUARTO HUMEDO (Sí/No), y 2 parámetros de tipo de muro: EXCLUIDO (Sí/No), CARTON YESO (Sí/No),\
@@ -92,24 +93,35 @@ def RoomCalc(room, excluded, hydro):
                 relevant_walls_and_curves.append(line + [line[0].Name in hydro, line[0].Id])
     # now we have [ element, curve, hydro, id ]
     # add area of wall hosted doors and windows from or to that room
-    final_walls = list()
+final_walls = list()
+    wallsvistas = []
+    idpvistas = []
+    idvvistas = []
     for wall in relevant_walls_and_curves:
         opening_area = 0
         hydro_opening_area = 0
         skirting_cut = 0
-        for door in door_matrix:
-            if door.hostid == wall[3]:
-                if door.toroom == room.Id or door.fromroom == room.Id:
-                    opening_area += (door.width*door.height)
-                    skirting_cut += door.width
-                    if room.GetParameters("CUARTO HUMEDO")[0].AsInteger() == 1 and wall[2]:
-                        hydro_opening_area += (door.width*door.height)
-        for window in window_matrix:
-            if window.hostid == wall[3]:
-                if window.toroom == room.Id or window.fromroom == room.Id:
-                    opening_area += (window.width*window.height)
-                    if room.GetParameters("CUARTO HUMEDO")[0].AsInteger() == 1 and wall[2]:
-                        hydro_opening_area += (window.width*window.height)
+        if wall[3].IntegerValue not in wallsvistas:
+            wallsvistas.append(wall[3].IntegerValue)
+            for door in door_matrix:
+                if door.id.IntegerValue not in idpvistas:
+                    if door.hostid == wall[3]:
+                        if door.toroom == room.Id or door.fromroom == room.Id:
+                            opening_area += (door.width*door.height)
+                            skirting_cut += door.width
+                            idpvistas.append(door.id.IntegerValue)
+                            if room.GetParameters("CUARTO HUMEDO")[0].AsInteger() == 1 and wall[2]:
+                                hydro_opening_area += (door.width*door.height)
+
+            for window in window_matrix:
+                if window.id.IntegerValue not in idvvistas:
+                    if window.hostid == wall[3]:
+                        if window.toroom == room.Id or window.fromroom == room.Id:
+                            opening_area += (window.width*window.height)
+                            idvvistas.append(window.id.IntegerValue)
+                            if room.GetParameters("CUARTO HUMEDO")[0].AsInteger() == 1 and wall[2]:
+                                hydro_opening_area += (window.width*window.height)
+
         final_walls.append(wall + [opening_area, skirting_cut, hydro_opening_area])
     # now we have [ element, curve, hydro, id, opening_area, skirting_cut, hydro_opening_area ]
     # LOS PANELES HIDROFUGADOS VAN HASTA EL TECHO, EL ACABADO NO
