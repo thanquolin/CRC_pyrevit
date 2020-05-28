@@ -24,6 +24,11 @@ solids = [solid for solid in el.get_Geometry(Options())]
 options = Options()
 geom = foo.Geometry[options]
 
+#Obtener el Workset de un Elemento, de Andreas Dieckmann
+def GetWorkset(item):
+	if hasattr(item, "WorksetId"): return item.Document.GetWorksetTable().GetWorkset(item.WorksetId)
+	else: return None
+
 #Para utilizar un overload concreto de un método de la api, especificando índice del overload.
 #Elemento.Método.Overloads.Functions[índice](resto de variables)
 
