@@ -16,9 +16,13 @@ from RevitServices.Transactions import TransactionManager
 doc = DocumentManager.Instance.CurrentDBDocument
 
 
-#Casting en python para sólidos (no podemos usar "as").
+#Sólidos con python (no podemos usar "as").
 
 solids = [solid for solid in el.get_Geometry(Options())]
+
+#O bien
+options = Options()
+geom = foo.Geometry[options]
 
 #Para utilizar un overload concreto de un método de la api, especificando índice del overload.
 #Elemento.Método.Overloads.Functions[índice](resto de variables)
