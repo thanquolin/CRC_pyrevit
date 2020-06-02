@@ -38,3 +38,26 @@ solid_A.Intersect.Overloads.Functions[2](solid_B)
 
 import System.Collections.Generic as col
 doc.Delete(col.List[ElementId]([ElementId(1234),ElementId(3456]))
+
+				
+# Funciones para ahorrar tiempo
+				
+def parFtM(element, parameterName):
+	"""Gets the element parameter value as a double in meters"""
+	return UnitUtils.ConvertFromInternalUnits(element.GetParameters(parameterName)[0].AsDouble(), DisplayUnitType.DUT_METERS)
+
+def parSFtSM(element, parameterName):
+	"""Gets the element parameter value as a double in square meters"""
+	return UnitUtils.ConvertFromInternalUnits(element.GetParameters(parameterName)[0].AsDouble(), DisplayUnitType.DUT_SQUARE_METERS)
+				
+def parCFtCM(element, parameterName):
+	"""Gets the element parameter value as a double in cubic meters"""
+	return UnitUtils.ConvertFromInternalUnits(element.GetParameters(parameterName)[0].AsDouble(), DisplayUnitType.DUT_CUBIC_METERS)
+				
+def elFec(catName):
+	"""Returns the instance (no type objects) filtered element collector of a category. Assumes "doc" as the current document variable"""
+	return eval("FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_" + catName + ").WhereElementIsNotElementType().ToElements()")
+
+
+				
+	
