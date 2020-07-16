@@ -1,6 +1,6 @@
-# coding: utf8
-"""Deletes all phase filters but one, renamed "View All", where all is shown and overrriden.\
-If such filter already exists, it is left as is, without creating another one."""
+# -*- coding: utf-8 -*-
+"""Deletes all phase filters but one, renamed as you please, where all is shown and overrriden.\
+If such filter name already exists, it is left as is, without creating another one."""
 __title__ = 'Phase Filters\nReset'
 __author__  = 'Carlos Romero Carballo'
 
@@ -8,10 +8,19 @@ import clr
 clr.AddReference('RevitAPI')
 from Autodesk.Revit.DB import *
 
+from pyrevit import forms
+
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
 
-default_filter_name = "View All"
+
+
+default_filter_name = forms.ask_for_string(
+    default='View All',
+    prompt='Enter Phase Filter name:',
+    title='Phase Filter Reset'
+)
+
 old_filters = FilteredElementCollector(doc).OfClass(PhaseFilter).ToElements()
 old_filters_names = [filter.Name for filter in old_filters]
 
