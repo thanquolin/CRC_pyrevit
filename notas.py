@@ -49,6 +49,64 @@ import System.Collections.Generic as col
 doc.Delete(col.List[ElementId]([ElementId(1234),ElementId(3456]))
 
 				
+#Open, save and close a Revit file 
+from Autodesk.Revit.DB import *
+doc = __revit__.ActiveUIDocument.Document
+app = doc.Application
+path = "C:\\Users\\Carlos\\Desktop\\Project1.rvt"
+open_options = OpenOptions()
+filepath = FilePath(path)
+newdoc = app.OpenDocumentFile(filepath,open_options)
+#Do stuff
+#Close() saves the file if there were any changes
+newdoc.Close()
+
+				
+#Get current selection
+from Autodesk.Revit.UI import UIApplication
+__revit__.ActiveUIDocument.Selection.GetElementIds()
+
+				
+#Purge unused elements
+doc = __revit__.ActiveUIDocument.Document
+purgeGuid = 'e8c63650-70b7-435a-9010-ec97660c1bda'
+purgableElementIds = []
+performanceAdviser = PerformanceAdviser.GetPerformanceAdviser()
+ruleId = None
+allRuleIds = performanceAdviser.GetAllRuleIds()
+for rule in allRuleIds:
+    if str(rule.Guid) == purgeGuid:
+        ruleId = rule
+        break
+import System.Collections.Generic as col
+ruleIds = col.List[PerformanceAdviserRuleId]([ruleId])
+for i in range(4):
+    # Executes the purge
+    failureMessages = performanceAdviser.ExecuteRules(doc, ruleIds)
+    if failureMessages.Count > 0:
+        # Retrieves the elements
+        purgableElementIds = failureMessages[0].GetFailingElements()
+# Deletes the elements
+t = Transaction(doc,"Purge")
+t.Start()
+try:
+    doc.Delete(purgableElementIds)
+except:
+    for e in purgableElementIds:
+        try:
+            doc.Delete(e)
+        except:
+            pass
+t.Commit()
+				
+
+#Distinguishing between "wrong" rooms
+#Redundant Rooms have Location and Boundary Segments
+#Not enclosed Rooms do not have Boundary Segments
+#Not placed Rooms do not have Location
+#None of the three have Area
+				
+				
 #Functions				
 def lenPar(element, parameterName):
 	"""Gets the element parameter value as a double in meters"""
