@@ -123,7 +123,27 @@ def volPar(element, parameterName):
 def catElements(catName):
 	"""Returns the instance (no type objects) filtered element collector of a category. Assumes "doc" as the current document variable"""
 	return eval("FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_" + catName + ").WhereElementIsNotElementType().ToElements()")
-
-
 				
-	
+#Renaming files with python
+import os
+os.rename(r'previous path', r'new path')
+				
+#Changing current working directory in python
+os.chdir(r'dir path')
+				
+#Working with utf8 csv
+import codecs
+import csv
+#When opening, 'w' to write, 'r' to read, 'w+' to read and write used as mode= argument
+file = codecs.open(r'file path', encoding = 'utf8', errors = 'replace')
+#Reading				
+reader = csv.reader(file)
+for row in reader:
+	print(row)
+#Writing
+writer = csv.writer(file)
+for row in whatever:
+	writer.writerow(row)
+				
+#If \ufeff appears at the beginning of the file, we have to use the right encoding
+f = open('file', mode='r', encoding='utf-8-sig')
