@@ -61,6 +61,10 @@ newdoc = app.OpenDocumentFile(filepath,open_options)
 #Close() saves the file if there were any changes
 newdoc.Close()
 
+# Getting linked documents
+fec = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_RvtLinks).WhereElementIsNotElementType().ToElements()			
+link = fec[0]
+linkDoc = lik.GetLinkDocument()
 				
 #Get current selection
 from Autodesk.Revit.UI import UIApplication
