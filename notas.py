@@ -64,7 +64,7 @@ newdoc.Close()
 # Getting linked documents
 fec = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_RvtLinks).WhereElementIsNotElementType().ToElements()			
 link = fec[0]
-linkDoc = lik.GetLinkDocument()
+linkDoc = link.GetLinkDocument()
 				
 #Get current selection
 from Autodesk.Revit.UI import UIApplication
