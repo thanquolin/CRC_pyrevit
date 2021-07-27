@@ -31,6 +31,11 @@ solids = [solid for solid in el.get_Geometry(Options())]
 options = Options()
 geom = foo.Geometry[options]
 
+#Solid of in-place FamilyInstance
+geom = foo.Geometry(Options())
+geo = [a for a in geom][0]
+solids = [a for a in geo.SymbolGeometry]
+
 
 #Get Element's Workset
 def GetWorkset(item):
@@ -151,3 +156,5 @@ for row in whatever:
 				
 #If \ufeff appears at the beginning of the file, we have to use the right encoding
 f = open('file', mode='r', encoding='utf-8-sig')
+
+				
