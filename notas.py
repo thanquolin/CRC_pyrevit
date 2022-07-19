@@ -157,4 +157,6 @@ for row in whatever:
 #If \ufeff appears at the beginning of the file, we have to use the right encoding
 f = open('file', mode='r', encoding='utf-8-sig')
 
-				
+#Changing System Family Type Names
+#WallType.Name to read type name does not work, WallType.Name = "Whatever" to set a new name does.
+#WallType.GetParameters("Type Name")[0].AsString() to read type name works, WallType.GetParameters("Type Name")[0].Set("Whatever") does not (only-read parameter).
